@@ -1,0 +1,1245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#214f4b">
+  <title>Timesheet Invoice</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17211f;
+      --muted: #65716e;
+      --line: #d9e1de;
+      --paper: #ffffff;
+      --wash: #f4f7f4;
+      --field: #f9fbfa;
+      --accent: #214f4b;
+      --accent-2: #b75e35;
+      --ok: #21613d;
+      --shadow: 0 12px 28px rgba(29, 47, 43, .11);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--wash);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      color: var(--ink);
+      font: 15px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #edf4f1 0, #f7f8f2 380px, #f4f7f4 100%);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app-shell {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: max(18px, env(safe-area-inset-top)) 14px 80px;
+    }
+
+    header {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 18px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.55rem, 6vw, 2.45rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      font-size: 1rem;
+      letter-spacing: 0;
+    }
+
+    h4 {
+      margin: 0;
+      color: var(--accent);
+      font-size: .86rem;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: .94rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid rgba(33, 79, 75, .18);
+      border-radius: 999px;
+      color: var(--accent);
+      background: rgba(255, 255, 255, .7);
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: grid;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin: 0 -2px 16px;
+      padding: 7px;
+      border: 1px solid rgba(33, 79, 75, .14);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .86);
+      backdrop-filter: blur(14px);
+    }
+
+    .tab-button {
+      min-height: 44px;
+      border-radius: 6px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 800;
+    }
+
+    .tab-button.active {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 8px 18px rgba(33, 79, 75, .22);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    #timesheetPanel > .layout {
+      margin-top: 16px;
+    }
+
+    .section {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .9);
+      box-shadow: var(--shadow);
+    }
+
+    .section + .section {
+      margin-top: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .form-grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .details-group {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 14px;
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .details-group h3 {
+      padding-bottom: 9px;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .details-subgroup {
+      display: grid;
+      gap: 12px;
+      margin-top: 2px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      color: var(--ink);
+      background: var(--field);
+      outline: none;
+    }
+
+    input {
+      min-height: 44px;
+      padding: 9px 10px;
+    }
+
+    textarea {
+      min-height: 92px;
+      padding: 10px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(33, 79, 75, .13);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 13px;
+      border-radius: 7px;
+      color: #fff;
+      background: var(--accent);
+      font-weight: 850;
+      text-decoration: none;
+    }
+
+    .btn.secondary {
+      color: var(--accent);
+      border: 1px solid rgba(33, 79, 75, .25);
+      background: #fff;
+    }
+
+    .btn.warn {
+      color: #fff;
+      background: var(--accent-2);
+    }
+
+    .btn.icon {
+      width: 44px;
+      padding: 0;
+      flex: 0 0 44px;
+      font-size: 1.15rem;
+    }
+
+    .entry-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .entry-card {
+      display: grid;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+    }
+
+    .entry-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .entry-fields {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+
+    .entry-description {
+      min-height: 44px;
+      resize: vertical;
+    }
+
+    .readonly-box {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      color: var(--ink);
+      background: #eef4f1;
+      font-weight: 850;
+    }
+
+    .summary-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .metric {
+      display: grid;
+      gap: 4px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric strong {
+      font-size: 1.35rem;
+    }
+
+    .invoice-preview {
+      display: grid;
+      gap: 18px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .invoice-title {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 16px;
+    }
+
+    .invoice-title h2 {
+      font-size: clamp(1.5rem, 6vw, 2.35rem);
+      text-transform: uppercase;
+    }
+
+    .invoice-meta {
+      text-align: right;
+      color: var(--muted);
+    }
+
+    .invoice-party-details {
+      display: grid;
+      gap: 3px;
+      margin-top: 5px;
+    }
+
+    .invoice-parties {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .93rem;
+    }
+
+    .invoice-table th,
+    .invoice-table td {
+      padding: 9px 7px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .invoice-table th {
+      color: var(--muted);
+      font-size: .74rem;
+      text-transform: uppercase;
+    }
+
+    .num {
+      text-align: right !important;
+      white-space: nowrap;
+    }
+
+    .totals {
+      display: grid;
+      gap: 8px;
+      justify-content: end;
+      margin-left: auto;
+      width: min(340px, 100%);
+    }
+
+    .total-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .grand {
+      padding-top: 10px;
+      border-top: 2px solid var(--ink);
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+
+    .empty-state {
+      padding: 18px;
+      border: 1px dashed #b8c5c1;
+      border-radius: 8px;
+      color: var(--muted);
+      background: #fff;
+      text-align: center;
+    }
+
+    .print-only {
+      display: none;
+    }
+
+    @media (max-width: 920px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .entry-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      body {
+        font-size: 14px;
+      }
+
+      .app-shell {
+        padding-inline: 10px;
+      }
+
+      header,
+      .section-head,
+      .invoice-title {
+        display: grid;
+      }
+
+      .status-pill,
+      .invoice-meta {
+        justify-self: start;
+        text-align: left;
+      }
+
+      .section {
+        padding: 12px;
+      }
+
+      .form-grid,
+      .form-grid.three,
+      .entry-fields,
+      .invoice-parties {
+        grid-template-columns: 1fr;
+      }
+
+      .actions .btn {
+        flex: 1 1 150px;
+      }
+
+      .invoice-preview {
+        padding: 14px;
+      }
+
+      .invoice-table {
+        font-size: .82rem;
+      }
+
+      .invoice-table th,
+      .invoice-table td {
+        padding: 7px 5px;
+      }
+    }
+
+    @media print {
+      @page {
+        size: A4;
+        margin: 12mm;
+      }
+
+      html,
+      body {
+        background: #fff;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .print-only {
+        display: block;
+      }
+
+      .app-shell {
+        width: auto;
+        padding: 0;
+      }
+
+      .panel {
+        display: none !important;
+      }
+
+      #invoicePanel {
+        display: block !important;
+      }
+
+      #invoicePanel > .layout > .section:first-child {
+        display: none;
+      }
+
+      .layout {
+        display: block;
+      }
+
+      .invoice-preview {
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+      }
+
+      .invoice-table th,
+      .invoice-table td {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="no-print">
+      <div>
+        <h1>Timesheet Invoice</h1>
+        <p class="subtle">Weekly timesheets and tax invoice PDF output.</p>
+      </div>
+      <div class="status-pill" id="saveStatus">Saved locally</div>
+    </header>
+
+    <nav class="tabs no-print" aria-label="Pages">
+      <button class="tab-button active" type="button" data-tab="timesheetPanel">Timesheet</button>
+      <button class="tab-button" type="button" data-tab="invoicePanel">Invoice Preview</button>
+    </nav>
+
+    <section class="panel active" id="timesheetPanel">
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>Tax Invoice Information</h2>
+            <p class="subtle">The preview updates as you type.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" type="button" data-tab="invoicePanel">Preview Invoice</button>
+          </div>
+        </div>
+
+        <div class="form-grid three">
+          <label>
+            Invoice Number
+            <input id="invoiceNumber" placeholder="INV-001">
+          </label>
+          <label>
+            Invoice Date
+            <input id="invoiceDate" type="date">
+          </label>
+          <label>
+            GST %
+            <input id="gstRate" type="number" min="0" step="0.01" inputmode="decimal" value="10">
+          </label>
+        </div>
+
+        <div class="details-group">
+          <h3>Client Information</h3>
+          <div class="form-grid">
+            <label>
+              Client Name
+              <input id="clientName" placeholder="Client or company">
+            </label>
+            <label>
+              Client Email
+              <input id="clientEmail" type="email" placeholder="client@example.com">
+            </label>
+            <label>
+              Client Phone
+              <input id="clientPhone" type="tel" placeholder="0412 345 678">
+            </label>
+            <label>
+              NDIS Number
+              <input id="clientNdisNumber" placeholder="NDIS number">
+            </label>
+            <label>
+              Client Address
+              <textarea id="clientAddress" placeholder="Client address"></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div class="details-group">
+          <h3>My Details</h3>
+          <div class="form-grid">
+            <label>
+              Your Business / Name
+              <input id="supplierName" placeholder="Your name or business">
+            </label>
+            <label>
+              ABN
+              <input id="supplierAbn" placeholder="ABN">
+            </label>
+            <label>
+              Email
+              <input id="supplierEmail" type="email" placeholder="you@example.com">
+            </label>
+            <label>
+              Phone
+              <input id="supplierPhone" type="tel" placeholder="0400 000 000">
+            </label>
+            <label>
+              Address
+              <textarea id="supplierAddress" placeholder="Business address"></textarea>
+            </label>
+          </div>
+
+          <div class="details-subgroup">
+            <h4>Account Details</h4>
+            <div class="form-grid">
+              <label>
+                Institution
+                <input id="bankInstitution" placeholder="Bank or institution">
+              </label>
+              <label>
+                Account Name
+                <input id="bankAccountName" placeholder="Account name">
+              </label>
+              <label>
+                Account
+                <input id="bankAccount" placeholder="Account number">
+              </label>
+              <label>
+                BSB
+                <input id="bankBsb" placeholder="000-000">
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="layout">
+        <div>
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <h2>Weekly Period</h2>
+                <p class="subtle" id="weekRange">Monday - Sunday</p>
+              </div>
+              <div class="actions">
+                <button class="btn secondary" type="button" id="addEntry">+ Entry</button>
+                <button class="btn secondary" type="button" id="fillWeek">Fill Week</button>
+              </div>
+            </div>
+            <div class="form-grid three">
+              <label>
+                Start of Week Date
+                <input id="weekStart" type="date">
+              </label>
+              <label>
+                Default Rate
+                <input id="defaultRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+              </label>
+              <label>
+                Default Description
+                <input id="defaultDescription" placeholder="Description of works complete">
+              </label>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <h2>Timesheet Entry Logs</h2>
+                <p class="subtle">Only rows with hours appear on the invoice.</p>
+              </div>
+            </div>
+            <div class="entry-list" id="entryList"></div>
+          </section>
+        </div>
+
+        <aside class="summary-stack no-print">
+          <div class="metric">
+            <span class="subtle">Hours</span>
+            <strong id="totalHours">0.00</strong>
+          </div>
+          <div class="metric">
+            <span class="subtle">Subtotal</span>
+            <strong id="subtotal">$0.00</strong>
+          </div>
+          <div class="metric">
+            <span class="subtle">Invoice Total</span>
+            <strong id="invoiceTotalMetric">$0.00</strong>
+          </div>
+          <button class="btn" type="button" data-tab="invoicePanel">Create Invoice</button>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel" id="invoicePanel">
+      <section class="section no-print">
+          <div class="section-head">
+            <div>
+              <h2>Invoice Preview</h2>
+              <p class="subtle">Review the PDF layout before saving.</p>
+            </div>
+            <div class="actions">
+              <button class="btn" type="button" id="printInvoice">Save PDF</button>
+              <a class="btn secondary" href="#" id="emailInvoice">Email</a>
+              <button class="btn secondary" type="button" data-tab="timesheetPanel">Edit Details</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="invoice-preview" id="invoiceDocument" aria-label="Invoice preview">
+          <div class="invoice-title">
+            <div>
+              <h2>Tax Invoice</h2>
+              <p id="previewSupplierName">Your Business / Name</p>
+            </div>
+            <div class="invoice-meta">
+              <p><strong id="previewInvoiceNumber">INV-001</strong></p>
+              <p id="previewAbn"></p>
+              <p id="previewInvoiceDate"></p>
+              <p id="previewWeekRange"></p>
+            </div>
+          </div>
+
+          <div class="invoice-parties">
+            <div>
+              <h3>From</h3>
+              <div class="invoice-party-details" id="previewSupplier"></div>
+            </div>
+            <div>
+              <h3>Bill To</h3>
+              <div class="invoice-party-details" id="previewClient"></div>
+            </div>
+          </div>
+
+          <div>
+            <table class="invoice-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th class="num">Hours</th>
+                  <th class="num">Rate</th>
+                  <th class="num">Total</th>
+                </tr>
+              </thead>
+              <tbody id="invoiceRows"></tbody>
+            </table>
+            <div class="empty-state" id="invoiceEmpty">No timesheet rows with hours yet.</div>
+          </div>
+
+          <div class="totals">
+            <div class="total-row">
+              <span>Subtotal</span>
+              <strong id="previewSubtotal">$0.00</strong>
+            </div>
+            <div class="total-row">
+              <span>GST</span>
+              <strong id="previewGst">$0.00</strong>
+            </div>
+            <div class="total-row grand">
+              <span>Total</span>
+              <strong id="previewTotal">$0.00</strong>
+            </div>
+          </div>
+
+          <div>
+            <h3>Payment Details</h3>
+            <div class="invoice-party-details" id="previewBank"></div>
+          </div>
+          <p class="subtle" id="previewNotes"></p>
+        </section>
+    </section>
+  </main>
+
+  <template id="entryTemplate">
+    <article class="entry-card">
+      <div class="entry-top">
+        <strong class="entry-heading">Entry</strong>
+        <button class="btn icon warn remove-entry" type="button" title="Remove entry" aria-label="Remove entry">x</button>
+      </div>
+      <div class="entry-fields">
+        <label>
+          Date
+          <input class="entry-date" type="date">
+        </label>
+        <label>
+          Day
+          <span class="readonly-box entry-day">-</span>
+        </label>
+        <label>
+          Start Time
+          <input class="entry-start" type="time">
+        </label>
+        <label>
+          Finish Time
+          <input class="entry-finish" type="time">
+        </label>
+        <label>
+          Description
+          <textarea class="entry-description" placeholder="Description of works complete"></textarea>
+        </label>
+        <label>
+          Total Hours
+          <span class="readonly-box entry-hours">0.00</span>
+        </label>
+        <label>
+          Rate
+          <input class="entry-rate" type="number" min="0" step="0.01" inputmode="decimal">
+        </label>
+        <label>
+          Total
+          <span class="readonly-box entry-total">$0.00</span>
+        </label>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    const STORAGE_KEY = "timesheetInvoiceApp.v1";
+    const fields = [
+      "weekStart", "defaultRate", "defaultDescription", "invoiceNumber", "invoiceDate", "gstRate",
+      "supplierName", "supplierAbn", "supplierEmail", "supplierPhone",
+      "bankInstitution", "bankAccountName", "bankAccount", "bankBsb",
+      "supplierAddress", "clientName", "clientEmail",
+      "clientPhone", "clientNdisNumber", "clientAddress"
+    ];
+
+    const state = {
+      entries: [],
+      values: {}
+    };
+
+    const $ = (selector, scope = document) => scope.querySelector(selector);
+    const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+
+    const money = new Intl.NumberFormat("en-AU", {
+      style: "currency",
+      currency: "AUD"
+    });
+
+    function isoDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      const parts = value.split("-").map(Number);
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function addDays(date, days) {
+      const next = new Date(date);
+      next.setDate(next.getDate() + days);
+      return next;
+    }
+
+    function displayDate(value) {
+      const date = parseDate(value);
+      if (!date) return "";
+      return date.toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" });
+    }
+
+    function displayDay(value) {
+      const date = parseDate(value);
+      if (!date) return "-";
+      return date.toLocaleDateString("en-AU", { weekday: "long" });
+    }
+
+    function timeToMinutes(value) {
+      if (!value) return null;
+      const [hours, minutes] = value.split(":").map(Number);
+      return (hours * 60) + minutes;
+    }
+
+    function calculateHours(start, finish) {
+      const startMinutes = timeToMinutes(start);
+      const finishMinutes = timeToMinutes(finish);
+      if (startMinutes === null || finishMinutes === null) return 0;
+      let diff = finishMinutes - startMinutes;
+      if (diff < 0) diff += 24 * 60;
+      return Math.round((diff / 60) * 100) / 100;
+    }
+
+    function toNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function defaultWeekStart() {
+      const today = new Date();
+      const day = today.getDay();
+      const mondayOffset = day === 0 ? -6 : 1 - day;
+      return isoDate(addDays(today, mondayOffset));
+    }
+
+    function blankEntry(date = "") {
+      return {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+        date,
+        description: state.values.defaultDescription || "",
+        start: "",
+        finish: "",
+        rate: state.values.defaultRate || ""
+      };
+    }
+
+    function load() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state.entries = Array.isArray(parsed.entries) ? parsed.entries : [];
+          state.values = parsed.values || {};
+        } catch {
+          state.entries = [];
+          state.values = {};
+        }
+      }
+
+      state.values.weekStart ||= defaultWeekStart();
+      state.values.invoiceDate ||= isoDate(new Date());
+      state.values.invoiceNumber ||= "INV-001";
+      state.values.gstRate ??= "10";
+
+      if (!state.entries.length) fillWeekEntries();
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const status = $("#saveStatus");
+      status.textContent = "Saved locally";
+      window.clearTimeout(save.statusTimer);
+      save.statusTimer = window.setTimeout(() => {
+        status.textContent = "Ready";
+      }, 1400);
+    }
+
+    function syncFieldValuesFromState() {
+      fields.forEach((id) => {
+        const el = $("#" + id);
+        if (el) el.value = state.values[id] ?? "";
+      });
+    }
+
+    function fillWeekEntries() {
+      const start = parseDate(state.values.weekStart || defaultWeekStart());
+      state.entries = Array.from({ length: 7 }, (_, index) => blankEntry(isoDate(addDays(start, index))));
+    }
+
+    function renderEntries() {
+      const list = $("#entryList");
+      list.innerHTML = "";
+      const template = $("#entryTemplate");
+
+      state.entries.forEach((entry, index) => {
+        const node = template.content.firstElementChild.cloneNode(true);
+        node.dataset.id = entry.id;
+        $(".entry-heading", node).textContent = entry.date ? displayDate(entry.date) : `Entry ${index + 1}`;
+        $(".entry-date", node).value = entry.date || "";
+        $(".entry-day", node).textContent = displayDay(entry.date);
+        $(".entry-description", node).value = entry.description || "";
+        $(".entry-start", node).value = entry.start || "";
+        $(".entry-finish", node).value = entry.finish || "";
+        $(".entry-rate", node).value = entry.rate || "";
+        updateEntryTotals(node, entry);
+        list.appendChild(node);
+      });
+    }
+
+    function updateEntryTotals(node, entry) {
+      const hours = calculateHours(entry.start, entry.finish);
+      const total = hours * toNumber(entry.rate);
+      $(".entry-hours", node).textContent = hours.toFixed(2);
+      $(".entry-total", node).textContent = money.format(total);
+    }
+
+    function getTotals() {
+      return state.entries.reduce((acc, entry) => {
+        const hours = calculateHours(entry.start, entry.finish);
+        const total = hours * toNumber(entry.rate);
+        acc.hours += hours;
+        acc.subtotal += total;
+        if (hours > 0) acc.billableRows.push({ ...entry, hours, total });
+        return acc;
+      }, { hours: 0, subtotal: 0, billableRows: [] });
+    }
+
+    function renderSummary() {
+      const { hours, subtotal } = getTotals();
+      const gst = subtotal * (toNumber(state.values.gstRate) / 100);
+      $("#totalHours").textContent = hours.toFixed(2);
+      $("#subtotal").textContent = money.format(subtotal);
+      $("#invoiceTotalMetric").textContent = money.format(subtotal + gst);
+    }
+
+    function renderWeekRange() {
+      const start = parseDate(state.values.weekStart);
+      if (!start) {
+        $("#weekRange").textContent = "Monday - Sunday";
+        $("#previewWeekRange").textContent = "";
+        return;
+      }
+      const end = addDays(start, 6);
+      const text = `${displayDate(isoDate(start))} - ${displayDate(isoDate(end))}`;
+      $("#weekRange").textContent = text;
+      $("#previewWeekRange").textContent = text;
+    }
+
+    function renderPartyDetails(target, fallback, rows) {
+      target.innerHTML = "";
+      const visibleRows = rows.filter((row) => row.value);
+
+      if (!visibleRows.length) {
+        target.textContent = fallback;
+        return;
+      }
+
+      visibleRows.forEach((row, index) => {
+        const line = document.createElement("p");
+        line.textContent = index === 0 && !row.label ? row.value : `${row.label}: ${row.value}`;
+        target.appendChild(line);
+      });
+    }
+
+    function renderInvoice() {
+      const { subtotal, billableRows } = getTotals();
+      const gst = subtotal * (toNumber(state.values.gstRate) / 100);
+      const total = subtotal + gst;
+      const rows = $("#invoiceRows");
+      rows.innerHTML = "";
+
+      billableRows.forEach((entry) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${displayDate(entry.date)}</td>
+          <td>${entry.description || "Works completed"}</td>
+          <td class="num">${entry.hours.toFixed(2)}</td>
+          <td class="num">${money.format(toNumber(entry.rate))}</td>
+          <td class="num">${money.format(entry.total)}</td>
+        `;
+        rows.appendChild(tr);
+      });
+
+      $("#invoiceEmpty").style.display = billableRows.length ? "none" : "block";
+      $("#previewSupplierName").textContent = state.values.supplierName || "Your Business / Name";
+      $("#previewInvoiceNumber").textContent = state.values.invoiceNumber || "INV-001";
+      $("#previewAbn").textContent = state.values.supplierAbn ? `ABN: ${state.values.supplierAbn}` : "";
+      $("#previewInvoiceDate").textContent = state.values.invoiceDate ? `Date: ${displayDate(state.values.invoiceDate)}` : "";
+      renderPartyDetails($("#previewSupplier"), "Supplier details", [
+        { value: state.values.supplierName },
+        { label: "Address", value: state.values.supplierAddress },
+        { label: "Email", value: state.values.supplierEmail },
+        { label: "PH", value: state.values.supplierPhone }
+      ]);
+      renderPartyDetails($("#previewClient"), "Client details", [
+        { value: state.values.clientName },
+        { label: "Address", value: state.values.clientAddress },
+        { label: "Email", value: state.values.clientEmail },
+        { label: "PH", value: state.values.clientPhone },
+        { label: "NDIS Number", value: state.values.clientNdisNumber }
+      ]);
+      $("#previewSubtotal").textContent = money.format(subtotal);
+      $("#previewGst").textContent = money.format(gst);
+      $("#previewTotal").textContent = money.format(total);
+      renderPartyDetails($("#previewBank"), "Bank details", [
+        { label: "Institution", value: state.values.bankInstitution },
+        { label: "Account Name", value: state.values.bankAccountName },
+        { label: "Account", value: state.values.bankAccount },
+        { label: "BSB", value: state.values.bankBsb }
+      ]);
+      $("#previewNotes").textContent = "";
+      updateEmailLink(total);
+    }
+
+    function updateEmailLink(total) {
+      const clientEmail = state.values.clientEmail || "";
+      const subject = encodeURIComponent(`Invoice ${state.values.invoiceNumber || ""}`.trim());
+      const body = encodeURIComponent([
+        `Hi ${state.values.clientName || ""},`,
+        "",
+        `Please find invoice ${state.values.invoiceNumber || ""} for ${money.format(total)}.`,
+        "",
+        "Regards,",
+        state.values.supplierName || ""
+      ].join("\n"));
+      $("#emailInvoice").href = `mailto:${clientEmail}?subject=${subject}&body=${body}`;
+    }
+
+    function renderAll() {
+      renderWeekRange();
+      renderEntries();
+      renderSummary();
+      renderInvoice();
+    }
+
+    function switchTab(panelId) {
+      $$(".panel").forEach((panel) => panel.classList.toggle("active", panel.id === panelId));
+      $$(".tab-button").forEach((button) => button.classList.toggle("active", button.dataset.tab === panelId));
+      if (panelId === "invoicePanel") renderInvoice();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    fields.forEach((id) => {
+      document.addEventListener("input", (event) => {
+        if (event.target.id !== id) return;
+        state.values[id] = event.target.value;
+
+        if (id === "defaultRate") {
+          state.entries.forEach((entry) => {
+            if (!entry.rate) entry.rate = event.target.value;
+          });
+          renderEntries();
+        }
+
+        if (id === "defaultDescription") {
+          state.entries.forEach((entry) => {
+            if (!entry.description) entry.description = event.target.value;
+          });
+          renderEntries();
+        }
+
+        if (id === "weekStart") renderWeekRange();
+        renderSummary();
+        renderInvoice();
+        save();
+      });
+    });
+
+    $("#entryList").addEventListener("input", (event) => {
+      const card = event.target.closest(".entry-card");
+      if (!card) return;
+      const entry = state.entries.find((item) => item.id === card.dataset.id);
+      if (!entry) return;
+
+      entry.date = $(".entry-date", card).value;
+      entry.description = $(".entry-description", card).value;
+      entry.start = $(".entry-start", card).value;
+      entry.finish = $(".entry-finish", card).value;
+      entry.rate = $(".entry-rate", card).value;
+
+      $(".entry-heading", card).textContent = entry.date ? displayDate(entry.date) : "Entry";
+      $(".entry-day", card).textContent = displayDay(entry.date);
+      updateEntryTotals(card, entry);
+      renderSummary();
+      renderInvoice();
+      save();
+    });
+
+    $("#entryList").addEventListener("click", (event) => {
+      const button = event.target.closest(".remove-entry");
+      if (!button) return;
+      const card = button.closest(".entry-card");
+      state.entries = state.entries.filter((entry) => entry.id !== card.dataset.id);
+      renderAll();
+      save();
+    });
+
+    document.addEventListener("click", (event) => {
+      const tabTarget = event.target.closest("[data-tab]");
+      if (tabTarget) switchTab(tabTarget.dataset.tab);
+    });
+
+    $("#addEntry").addEventListener("click", () => {
+      state.entries.push(blankEntry());
+      renderAll();
+      save();
+    });
+
+    $("#fillWeek").addEventListener("click", () => {
+      fillWeekEntries();
+      renderAll();
+      save();
+    });
+
+    $("#printInvoice").addEventListener("click", () => {
+      renderInvoice();
+      window.print();
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js").catch(() => {});
+      });
+    }
+
+    load();
+    syncFieldValuesFromState();
+    renderAll();
+    save();
+  </script>
+</body>
+</html>
